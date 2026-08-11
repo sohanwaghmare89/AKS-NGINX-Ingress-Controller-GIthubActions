@@ -1,0 +1,47 @@
+controller:
+  # Must differ from the public ingress-nginx release (same namespace).
+  electionID: ingress-nginx-internal-leader
+
+  replicaCount: 2
+
+  nodeSelector:
+    kubernetes.io/os: linux
+
+  ingressClassResource:
+    name: nginx-internal
+    enabled: true
+    default: false
+    # Required: default k8s.io/ingress-nginx would match the public controller
+    # and both would reconcile / update the same Ingress status.
+    controllerValue: k8s.io/ingress-nginx-internal
+
+  ingressClass: nginx-internal
+
+  ingressClassByName: true
+  watchIngressWithoutClass: false
+  extraArgs:
+    ingress-class: nginx-internal
+    
+  service:
+    annotations:
+      service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+      service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: /healthz
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 80
+
+defaultBackend:
+  nodeSelector:
+    kubernetes.io/os: linux
+  replicaCount: 2
