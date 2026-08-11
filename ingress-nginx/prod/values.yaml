@@ -1,0 +1,49 @@
+# ingress-nginx prod values (public LB)
+# Multiple controllers in the same namespace must use a unique electionID and a
+# distinct ingressClassResource.controllerValue so they do not fight over
+# Ingress status (loadBalancer IP flipping between public and private).
+controller:
+  electionID: ingress-nginx-external-leader
+
+  ingressClassResource:
+    name: nginx
+    enabled: true
+    default: true
+    controllerValue: k8s.io/ingress-nginx
+
+  ingressClass: nginx
+  ingressClassByName: true
+  watchIngressWithoutClass: false
+  extraArgs:
+    ingress-class: nginx
+
+  replicaCount: 2
+
+  nodeSelector:
+    kubernetes.io/os: linux
+
+  service:
+    externalTrafficPolicy: Local
+    loadBalancerIP: "XX.233.98.XXX"
+    annotations:
+      service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: /healthz
+      service.beta.kubernetes.io/azure-load-balancer-resource-group: "MC_mycluster-prod-apps-rg_mycluster-prod-aks_uaenorth"
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 80
+
+defaultBackend:
+  nodeSelector:
+    kubernetes.io/os: linux
+  replicaCount: 2
